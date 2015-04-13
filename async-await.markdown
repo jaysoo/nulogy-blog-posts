@@ -38,7 +38,7 @@ The promise version is a lot less readable, and the error handling is harder tha
 
 ## Error handling with promises
 
-Take this piece of synchronous code. What is the asynchronous version?
+Take the following piece of synchronous code. What is the asynchronous version?
 
 ```js
 try {
