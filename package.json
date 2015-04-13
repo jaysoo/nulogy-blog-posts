@@ -1,0 +1,41 @@
+{
+  "name": "ng1-directive",
+  "version": "0.1.0",
+  "description": "ng1 example",
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "amdefine": "*",
+    "babel-runtime": "^4.3.0",
+    "babelify": "~5.0.3",
+    "browserify": "~8.1.3",
+    "esutils": "*",
+    "gulp": "^3.8.7",
+    "gulp-connect": "~2.2.0",
+    "gulp-install": "^0.2.0",
+    "gulp-sass": "~1.3.2",
+    "gulp-util": "~3.0.3",
+    "react": "~0.12.1",
+    "regenerator": "~0.8.11",
+    "require-dir": "*",
+    "source-map": "*",
+    "vinyl-buffer": "~1.0.0",
+    "vinyl-source-stream": "~1.0.0",
+    "watchify": "~2.3.0"
+  },
+  "scripts": {
+    "test": "karma start --single-run",
+    "start": "gulp",
+    "build": "gulp build"
+  },
+  "dependencies": {
+    "angular": "^1.3.15",
+    "es6-promise": "2.0.1",
+    "flummox": "2.11.0",
+    "node-fetch": "*",
+    "lodash": "3.2.0",
+    "node-uuid": "^1.4.2",
+    "todomvc-app-css": "^2.0.1",
+    "todomvc-common": "^1.0.1"
+  }
+}

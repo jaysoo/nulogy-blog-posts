@@ -1,0 +1,21 @@
+# Introduction to ES2016 async-await features
+
+
+```js
+const f = async function () {
+    throw new Error('Oh noes');
+}
+
+try {
+    await f();
+} catch (err) {
+    console.log(err);
+}
+
+// Or
+f().then(function () {
+    console.log('success!');
+}, function (err) {
+    console.log(err);
+});
+```
