@@ -196,4 +196,4 @@ Each await in the above example would yield, essentially making each `oneOrError
 
 - The ES7 [async function](https://github.com/lukehoban/ecmascript-asyncawait) proposal on GitHub.
 
-- Also, check out the [async generator](https://github.com/jhusain/asyncgenerator) proposal, which adds asynchronous generator functions that return Observables.
+- Also, check out the [async generator](https://github.com/jhusain/asyncgenerator) proposal, which adds asynchronous generator functions that return Observables instead of Promises.
