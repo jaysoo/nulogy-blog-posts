@@ -159,10 +159,8 @@ const results [
 
 Each await in the above example would yield, essentially making each `oneOrErrorAsync()` call sequential.
 
-## Further readings
+## Closing thoughts
 
-- Jake Archibald has an [article](http://jakearchibald.com/2014/es7-async-functions/) written a year ago on ES7 and async-await.
+This post gives a quick intro to async functions in ES7. If you want to read more, I would encourage you to read through the [proposal on GitHub](https://github.com/lukehoban/ecmascript-asyncawait).
 
-- The ES7 [async function](https://github.com/lukehoban/ecmascript-asyncawait) proposal on GitHub.
-
-- Also, check out the [async generator](https://github.com/jhusain/asyncgenerator) proposal, which adds asynchronous generator functions that return Observables instead of Promises.
+Another related proposal is the  [async generator](https://github.com/jhusain/asyncgenerator), which combines asynchronous  functions and generators to return Observables instead of Promises.
