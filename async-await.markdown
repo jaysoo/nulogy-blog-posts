@@ -1,194 +1,163 @@
 # From promises to async-await
 
-[Promises](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise) in JavaScript are a way to handle asynchronous execution in JavaScript. Since JavaScript applications are single-threaded, we must take great care to not block the thread for IO calls. Working with promises, however, has always been clunky, and [riddled with lots of gotchas](http://taoofcode.net/promise-anti-patterns/).
+[Promises](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise) in JavaScript are a way to handle asynchronous execution in JavaScript. Since JavaScript applications are single-threaded, we must take great care to not block the thread for IO calls.
 
-For example, here's a function that returns a promise that resolves to `1` 90% of the time, otherwise it rejects with an error.
+Working with promises, however, has always been clunky, and [riddled with gotchas](http://taoofcode.net/promise-anti-patterns/).
 
-```js
-const oneOrError = () =>
-  new Promise((resolve, reject) =>
-    Math.random() < 0.9
-      ? setTimeout(() => resolve(1), 0)
-      : setTimeout(() => reject(new Error('failed')), 0)
-  );
+This this post we'll explore [Async Functions](https://github.com/lukehoban/ecmascript-asyncawait) (currently in proposal for ES7), and how they can make working with promises easier.
+
+## In the beginning...
+
+Let's start by looking at some synchronous code. Say we have a function that has a 90% chance of returns a 1, otherwise throws an error.
+
+```
+function oneOrErrorSync() {
+  if (Math.random() < 0.9) {
+    return 1;
+  } else {
+    throw new  Error('failed');
+  }
+}
 ```
 
-Let's call it twice, and sum up the values.
+We can call this function as follows.
 
-```js
-oneOrError()
-  .then(r1 => oneOrError().then(r2 =>  r1 + r2))
-  .then(total => { console.log(total) })
-  .catch(err => { console.error(err) });
+```
+let total = oneOrErrorSync() + oneOrErrorSync();
+console.log(`The totals is ${total}.`);
 ```
 
-The above is the asynchronous equivalent of:
+Pretty straight-forward. We're calling the function twice and adding the values together.
 
-```js
+Of course, error handling is not present yet.
+
+## On to async!
+
+Here's an async version of the `oneOrErrorSync` function.
+
+```
+function oneOrErrorAsync() {
+  return new Promise((resolve, reject) => {
+    if (Math.random() < 0.9) {
+      setTimeout(() => resolve(1), 0);
+    } else {
+      setTimeout(() => reject(new Error('failed')), 0);
+    }
+  });
+}
+```
+
+Again, let's call it twice, and sum up the values.
+
+```
+oneOrErrorAsync()
+  .then(r1 => oneOrErrorAsync().then(r2 =>  r1 + r2))
+  .then(total => { console.log(`The total is ${total}.`) })
+```
+
+Here, we're waiting for the first promise to resolve, then making the second call. Finally, when the second result comes back, we return the total. The second `.then()` resolves with the total.
+
+Now, let's compare error handling of sync vs async.
+
+## Synchronous error handling
+
+Let's start with the following synchronous code.
+
+```
+let total = 0;
+
 try {
-  const r1 = syncOneOrError();
-  const r2 = syncOneOrError();
-  console.log(r1 + r2);
+  total += oneOrErrorSync();
 } catch(e) {
-  console.error(e);
+  throw new Error('First call errored.');
 }
-```
 
-The promise version is a lot less readable, and the error handling is harder than in the synchronous case.
-
-## Error handling with promises
-
-Take the following piece of synchronous code. What is the asynchronous version?
-
-```js
 try {
-  try {
-    syncOneOrError(); // May throw an error
-    console.log('first call succeeded');
-  } catch(e) {
-    throw new Error('first call failed');
-  }
-
-  try {
-    syncOneOrError(); // May throw an error
-    console.log('second call succeeded');
-  } catch(e) {
-    throw new Error('second call failed');
-  }
-
-  console.log('both calls succeeded');
-} catch(err) {
-  console.error(err);
+  total += oneOrErrorSync();
+} catch(e) {
+  throw new Error('Second call errored.');
 }
 
-console.log('after both calls');
+console.log('After both calls...');
+console.log(`The total is ${total}.`);
 ```
 
-I'll let you think for a a bit.
+Now, let's compare the previous code to the async version.
 
-.
+```
+let total = 0;
 
-.
-
-.
-
-Ready?
-
-```js
-oneOrError().then(() => {
-  console.log('first call succeeded');
-  return oneOrError().then(() => {
-    console.log('second call succeeded');
+oneOrError().then((value) => {
+  total += value;
+  return oneOrError().then((value) => {
+    total += value;
   }).catch(() => {
-    throw new Error('second call failed');
+    throw new Error('Second call errored.');
   });
 }).catch(() => {
-  throw new Error('first call failed');
+  throw new Error('First call errored.');
 }).then(() => {
-  console.log('both call succeeded');
-}).catch((err) => {
-  console.error(err);
-}).then(() => {
-  console.log('after both calls');
+  console.log('After both calls...');
+  console.log(`The total is ${total}.`);
 });
 ```
 
-Because the program flow does not follow the ordering of the statements, the code becomes harder to reason about. The error handler for the first call appears *after* the error handler for the second call.
+I'd argue that the code is hard to follow because the program flow does not match the ordering of the statements. The error handler for the first call appears *after* the error handler for the second call.
 
-This is where **async-await** comes in handy. [Async functions](https://github.com/lukehoban/ecmascript-asyncawait) are currently in the proposal stage of ES7. Some transpilers such as [Babel](https://babeljs.io/) have added support for them.
+This is where **async-await** comes in.
 
-## Refactoring with ascyn-await
+## Refactoring with async-await
 
-Let's go back to our last example. Here is the async-await version.
+Let's rewrite the previous async example using async-await.
 
-```js
+```
 // Wrapping in an async IEFE in order to use await.
 (async function () {
+  let total = 0;
+  
   try {
-    try {
-      await oneOrError();
-      console.log('first call succeeded');
-    } catch(e) {
-      throw new Error('first call failed');
-    }
-
-    try {
-      await oneOrError();
-      console.log('second call succeeded');
-    } catch(e) {
-      throw new Error('second call failed');
-    }
-
-    console.log('both calls succeeded');
-  } catch(err) {
-    console.error(err);
+    total += await oneOrErrorAsync();
+  } catch(e) {
+    throw new Error('First call errored.');
   }
-
-  console.log('after both calls');
+  
+  try {
+    total += await oneOrErrorAsync();
+  } catch(e) {
+    throw new Error('Second call errored.');
+  }
+  
+  console.log('After both calls...');
+  console.log(`The total is ${total}.`);
 })();
 ```
 
-The code above reads similarly to the synchronous version, with sprinkles of `async` and `await`. What happens here is that when `await` is called, the async function yields until the `oneOrError()` is resolved. When the promise is rejected, the rejected value is raised as an error. This allows error handling through try-catch blocks, rather than `.then()` and `.catch()`.
+The code above reads similarly to the synchronous version, with sprinkles of `async` and `await`. This new syntax allows us to cut out a lot of boilerplate, which only gets worse the more involved the code is.
 
-The other benefit of async-await is that computation with futures also becomes easier.
+When the `await` expression runs, the async function will yield execution. When the promise is resolved, execution resumes with a return. Otherwise, when the promise is rejected, an error is thrown.
 
-```js
-try {
-  const total = (await oneOrError()) + (await oneOrError()) + (await oneOrError());
-  console.log(`total: ${total}`);
-} catch(err) {
-  console.error(err);
-}
+## Using `await*` for parallel execution
+
+When we need to await the results of a collection of Promises, we can use the `await*`` syntax.
+
+```
+let results = await* [oneOrErrorAsync(), oneOrErrorAsync(), oneOrErrorAsync(), oneOrErrorAsync()];
 ```
 
-## Other use cases
-
-Here are a couple other use cases for async-await.
-
-### Returning a promise without `new Promise()`
-
-The return type of an `async` function is a Promise. This means the following function returns a promise object.
-
-```js
-async function f() {
-  return 'hello world';
-}
-```
-
-We can use it with the Promise API or async-await.
-
-```js
-// Promise
-f().then(msg => console.log(msg));
-
-// async-await
-(async function () {
-  console.log(await f());
-})();
-```
-
-### Using `await*` for parallel execution
-
-When we need to await the results of a collection of Promises, we can use the proposed `await*`` syntax. (This is not final yet)
-
-```js
-const results = await* [oneOrError(), oneOrError(), oneOrError(), oneOrError()];
-```
-
-The above will concurrently call `oneOrError()` four times and wait for all of them to return a result, or one of them to error out.
+The above will concurrently call `oneOrErrorAsync()` four times and wait for all of them to return a result, or one of them to error out.
 
 Note that this is not the same as calling await four times.
 
-```js
+```
 const results [
-  await oneOrError(),
-  await oneOrError(),
-  await oneOrError(),
-  await oneOrError()
+  await oneOrErrorAsync(),
+  await oneOrErrorAsync(),
+  await oneOrErrorAsync(),
+  await oneOrErrorAsync()
 ]
 ```
 
-Each await in the above example would yield, essentially making each `oneOrError()` call sequential.
+Each await in the above example would yield, essentially making each `oneOrErrorAsync()` call sequential.
 
 ## Further readings
 
