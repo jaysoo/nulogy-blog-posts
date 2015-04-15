@@ -8,7 +8,7 @@ This this post we'll explore [Async Functions](https://github.com/lukehoban/ecma
 
 ## In the beginning...
 
-Let's start by looking at some synchronous code. Say we have a function that has a 90% chance of returns a 1, otherwise throws an error.
+Let's start by looking at some synchronous code. Say we have a function that has a 90% chance of returning a 1, otherwise throws an error.
 
 ```
 function oneOrErrorSync() {
